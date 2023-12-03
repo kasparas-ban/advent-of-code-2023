@@ -17,6 +17,7 @@ type match struct {
 }
 
 var numValues = map[string]int{
+	"zero":  0,
 	"one":   1,
 	"two":   2,
 	"three": 3,
@@ -41,7 +42,7 @@ var numValues = map[string]int{
 func main() {
 	var numberList []string
 
-	f, err := os.Open("input_test.txt")
+	f, err := os.Open("input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,17 +56,32 @@ func main() {
 		var allMatches []match
 
 		for _, key := range maps.Keys(numValues) {
-			matchedIdx := strings.Index(line, key)
+			lastIdx := 0
 
-			// Is number value matched
-			if matchedIdx != -1 {
-				newMatch := match{
-					idx:   matchedIdx,
-					value: numValues[key],
+			// Match all occurances of the given number
+			for true {
+				if lastIdx >= len(line) {
+					break
 				}
-				allMatches = append(allMatches, newMatch)
+
+				matchedIdx := strings.Index(line[lastIdx:], key)
+				fmt.Printf("\n Checking %v | key: %v | matchedIdx: %v \n", line[lastIdx+1:], key, matchedIdx)
+
+				// Is number value matched
+				if matchedIdx != -1 {
+					newMatch := match{
+						idx:   matchedIdx,
+						value: numValues[key],
+					}
+					allMatches = append(allMatches, newMatch)
+					lastIdx = (lastIdx + matchedIdx) + 1
+				} else {
+					break
+				}
 			}
 		}
+
+		fmt.Printf("\n Matches: %v \n", allMatches)
 
 		// Find matched value with min idx
 		firstNumber := getMin(allMatches)
@@ -73,7 +89,7 @@ func main() {
 		// Find matched value with max idx
 		lastNumber := getMax(allMatches)
 
-		fmt.Printf("\n FisrtNum: %v | LastNum: %v \n", firstNumber, lastNumber)
+		fmt.Printf("\n FirstNum: %v | LastNum: %v \n", firstNumber, lastNumber)
 
 		finalNum := fmt.Sprintf("%v%v", firstNumber, lastNumber)
 		numberList = append(numberList, finalNum)
@@ -95,7 +111,7 @@ func main() {
 		sum += num
 	}
 
-	fmt.Printf("%v \n", sum)
+	fmt.Printf("\n Result: %v \n", sum)
 }
 
 func getMin(array []match) int {

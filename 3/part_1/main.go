@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	input, err := os.ReadFile("input.txt")
+	input, err := os.ReadFile("input_test.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,9 +33,10 @@ func main() {
 		}
 
 		for _, num := range lineNums {
-			valid := checkAroundNum(prevLine, line, nextLine, num)
+			isPartNum := checkAroundNum(prevLine, line, nextLine, num)
+			// fmt.Printf("Num: %v | %v\n", num, isPartNum)
 
-			if valid {
+			if isPartNum {
 				numValue, err := strconv.Atoi(num)
 				if err != nil {
 					log.Fatal(err)
@@ -77,7 +78,7 @@ func checkAroundNum(prevLine string, line string, nextLine string, num string) b
 		}
 
 		// Diagonal check
-		if numIdx+len(num)+1 <= len(prevLine)-1 {
+		if numIdx+len(num)+1 <= len(prevLine) {
 			contains := containsSymbol(prevLine[numIdx : numIdx+len(num)+1])
 			if contains {
 				return true
@@ -97,7 +98,7 @@ func checkAroundNum(prevLine string, line string, nextLine string, num string) b
 		}
 
 		// Diagonal check
-		if numIdx+len(num)+1 <= len(nextLine)-1 {
+		if numIdx+len(num)+1 <= len(nextLine) {
 			contains := containsSymbol(nextLine[numIdx : numIdx+len(num)+1])
 			if contains {
 				return true

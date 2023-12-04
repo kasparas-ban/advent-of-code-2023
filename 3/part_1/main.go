@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
 func main() {
-	input, err := os.ReadFile("input_test.txt")
+	input, err := os.ReadFile("input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,8 +20,6 @@ func main() {
 	result := 0
 
 	for lineIdx, line := range read_lines {
-		lineNums := getLineNums(line)
-
 		var prevLine string
 		var nextLine string
 		if lineIdx-1 >= 0 {
@@ -32,17 +29,42 @@ func main() {
 			nextLine = read_lines[lineIdx+1]
 		}
 
-		for _, num := range lineNums {
-			isPartNum := checkAroundNum(prevLine, line, nextLine, num)
-			// fmt.Printf("Num: %v | %v\n", num, isPartNum)
+		numString := ""
+		numIdx := 0
+		for charIdx, char := range line {
+			if unicode.IsDigit(char) {
+				if numString == "" {
+					numIdx = charIdx
+				}
+				numString += string(char)
 
-			if isPartNum {
-				numValue, err := strconv.Atoi(num)
-				if err != nil {
-					log.Fatal(err)
+				if charIdx == len(line)-1 {
+					isPartNum := checkAroundNum(prevLine, line, nextLine, numString, numIdx)
+					if isPartNum {
+						numValue, err := strconv.Atoi(numString)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						result += numValue
+					}
+				}
+			} else {
+				// Check number and add it if valid
+				if numString != "" {
+					isPartNum := checkAroundNum(prevLine, line, nextLine, numString, numIdx)
+					if isPartNum {
+						numValue, err := strconv.Atoi(numString)
+						if err != nil {
+							log.Fatal(err)
+						}
+
+						result += numValue
+					}
 				}
 
-				result += numValue
+				numString = ""
+				numIdx = charIdx
 			}
 		}
 	}
@@ -50,13 +72,38 @@ func main() {
 	fmt.Printf("Result: %v\n", result)
 }
 
-func getLineNums(line string) []string {
-	re := regexp.MustCompile("[0-9]+")
-	return re.FindAllString(line, -1)
-}
+func checkAroundNum(prevLine string, line string, nextLine string, num string, numIdx int) bool {
+	// Top check
+	topStartIdx := 0
+	topEndIdx := numIdx + len(num)
+	if prevLine != "" {
+		if numIdx-1 >= 0 {
+			topStartIdx = numIdx - 1
+		}
+		if numIdx+len(num)+1 <= len(prevLine) {
+			topEndIdx = numIdx + len(num) + 1
+		}
 
-func checkAroundNum(prevLine string, line string, nextLine string, num string) bool {
-	numIdx := strings.Index(line, num)
+		if containsSymbol(prevLine[topStartIdx:topEndIdx]) {
+			return true
+		}
+	}
+
+	// Bottom check
+	bottomStartIdx := 0
+	bottomEndIdx := numIdx + len(num)
+	if nextLine != "" {
+		if numIdx-1 >= 0 {
+			bottomStartIdx = numIdx - 1
+		}
+		if numIdx+len(num)+1 <= len(nextLine) {
+			bottomEndIdx = numIdx + len(num) + 1
+		}
+
+		if containsSymbol(nextLine[bottomStartIdx:bottomEndIdx]) {
+			return true
+		}
+	}
 
 	// Horizontal check
 	if numIdx-1 >= 0 {
@@ -67,48 +114,6 @@ func checkAroundNum(prevLine string, line string, nextLine string, num string) b
 	if numIdx+len(num) <= len(line)-1 {
 		if containsSymbol(string(line[numIdx+len(num)])) {
 			return true
-		}
-	}
-
-	// Vertical check
-	if prevLine != "" {
-		contains := containsSymbol(prevLine[numIdx : numIdx+len(num)])
-		if contains {
-			return true
-		}
-
-		// Diagonal check
-		if numIdx+len(num)+1 <= len(prevLine) {
-			contains := containsSymbol(prevLine[numIdx : numIdx+len(num)+1])
-			if contains {
-				return true
-			}
-		}
-		if numIdx-1 >= 0 {
-			contains := containsSymbol(prevLine[numIdx-1 : numIdx])
-			if contains {
-				return true
-			}
-		}
-	}
-	if nextLine != "" {
-		contains := containsSymbol(nextLine[numIdx : numIdx+len(num)])
-		if contains {
-			return true
-		}
-
-		// Diagonal check
-		if numIdx+len(num)+1 <= len(nextLine) {
-			contains := containsSymbol(nextLine[numIdx : numIdx+len(num)+1])
-			if contains {
-				return true
-			}
-		}
-		if numIdx-1 >= 0 {
-			contains := containsSymbol(nextLine[numIdx-1 : numIdx])
-			if contains {
-				return true
-			}
 		}
 	}
 
